@@ -3,13 +3,13 @@ import cvzone
 import HandTrackingModule
 
 cap= cv2.VideoCapture(0) #0 =laptop camera capture video
-detector = HandTrackingModule.HandDetector(maxHands=1)
+detector = HandTrackingModule.HandDetector(maxHands=1) #this project detect one hand only
 
 
 while True:
-    success, img = cap.read()
-
+    success, img = cap.read() #read the image of the camera = img
     hands,img = detector.findHands(img)
+    #hand =>(lmlist,bbox,center,type)
 
     if hands:
         # Hand 1
