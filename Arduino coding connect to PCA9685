@@ -1,0 +1,84 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+// called this way, it uses the default address 0x40
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+#define MIN_PULSE_WIDTH 650
+#define MAX_PULSE_WIDTH 2350
+#define DEFAULT_PULSE_WIDTH 1500
+#define FREQUENCY 50
+// our servo # counter
+uint8_t servonum = 0;
+
+////////////////////////////////////////////////////////////
+
+#define numofValsRec 5  //received 5 values depends how many input
+#define digitsPerValRec 1 //depend on analog or digital
+
+int valsRec[numofValsRec]; //value received
+int stringLength = numofValsRec * digitsPerValRec +1; //stringlength= $00000 = 6
+int counter = 0;
+bool counterStart = false; //if received $signal counter will start
+String receivedString;
+
+
+///////////////////////////////////////////////////////////////////////////
+
+void setup() 
+{
+Serial.begin(9600);
+Serial.println("16 channel Servo test!");
+pwm.begin();
+pwm.setPWMFreq(FREQUENCY);
+}
+int pulseWidth(int angle)
+{
+int pulse_wide, analog_value;
+pulse_wide = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
+analog_value = int(float(pulse_wide) / 1000000 * FREQUENCY * 4096);
+Serial.println(analog_value);
+return analog_value;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+void receiveData(){
+  while(Serial.available()){
+    char c = Serial.read();
+
+    if (c=='$'){
+      counterStart = true;
+      }
+      if (counterStart){
+        if(counter < stringLength){
+          receivedString = String(receivedString+c);
+          counter++;
+          }
+          if(counter>=stringLength){
+            for(int i=0; i<numofValsRec; i++)  //this loop is to split up $00000 become one by one
+            {
+              int num = (i* digitsPerValRec)+1; //+1 = $
+            valsRec[i]=receivedString.substring(num,num+digitsPerValRec).toInt();
+            }
+            receivedString = "";
+            counter = 0;
+            counterStart = false;
+            }
+        }
+    
+    }
+  
+  }
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+void loop() {
+  receiveData();
+  if (valsRec[0]==1){pwm.setPWM(0, 0, pulseWidth(180));}else{pwm.setPWM(0, 0, pulseWidth(0));}
+  if (valsRec[1]==1){pwm.setPWM(2, 0, pulseWidth(180));}else{pwm.setPWM(2, 0, pulseWidth(0));}
+  if (valsRec[2]==1){pwm.setPWM(3, 0, pulseWidth(180));}else{pwm.setPWM(3, 0, pulseWidth(0));}
+  if (valsRec[3]==1){pwm.setPWM(5, 0, pulseWidth(180));}else{pwm.setPWM(5, 0, pulseWidth(0));}
+  if (valsRec[4]==1){pwm.setPWM(7, 0, pulseWidth(180));}else{pwm.setPWM(7, 0, pulseWidth(0));}
+  
+}
