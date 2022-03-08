@@ -1,10 +1,10 @@
 import cv2
-import cvzone
+import serialModule
 import HandTrackingModule
 
 cap= cv2.VideoCapture(0) #0 =laptop camera capture video
 detector = HandTrackingModule.HandDetector(maxHands=1) #this project detect one hand only
-
+mySerial= serialModule.SerialObject('COM6',9600,1)
 
 while True:
     success, img = cap.read() #read the image of the camera = img
@@ -21,6 +21,7 @@ while True:
 
         fingers1 = detector.fingersUp(hand1)
         print(fingers1)
+        mySerial.sendData(fingers1)
 
     cv2.imshow("image", img) #video window's name
     cv2.waitKey(1) #delay time
